@@ -1,20 +1,20 @@
-import pandas_datareader as pdr
-from pandas_datareader import data, wb
 from datetime import date
 import numpy as np
 import pandas as pd
+import yfinance as yf
 
-risk_free_return = 0.05
+risk_free_return = 0.105
 
-def capm(start, end, ticker1, ticker2):
+def capm(start, ticker1, ticker2):
     #Get stock data
-    stock1 = pdr.get_data_yahoo(ticker1, start, end)
+    stock1 = yf.download(ticker1, start)
     #Get market data
-    stock2 = pdr.get_data_yahoo(ticker2, start, end)
+    stock2 = yf.download(ticker2, start)
+
 
     #Resample for monthly data
-    return_s1 = stock1.resample('M').last()
-    return_s2 = stock2.resample('M').last()
+    return_s1 = stock1.resample('ME').last()
+    return_s2 = stock2.resample('ME').last()
     
     #Create a dataframe with the adjusted close
     data = pd.DataFrame({'s_adjclose' : return_s1['Adj Close'], 'm_adjclose': return_s2['Adj Close']}, index=return_s1.index)
@@ -23,7 +23,7 @@ def capm(start, end, ticker1, ticker2):
     data[['s_returns','m_returns']] = np.log(data[['s_adjclose', 'm_adjclose']]/data[['s_adjclose', 'm_adjclose']].shift(1))
     
     #Drop null values
-    data = data.dropna();
+    data = data.dropna()
 
     #Generate covarience matrix
     covmat = np.cov(data["s_returns"], data["m_returns"])
@@ -42,4 +42,5 @@ def capm(start, end, ticker1, ticker2):
     print("Expected Return: ",expected_return)
 
 if __name__ == "__main__":
-    capm("01 01 2016", "10 10 2019", 'S', "^GSPC")
+    capm("2024-01-01", 'bova11.sa', "itub4.SA")
+
